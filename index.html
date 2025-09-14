@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bounation – 3D Model Viewer</title>
+  <meta name="description" content="GitHub Pages site that displays a GLB 3D model." />
+  <!-- model-viewer web component -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    :root { --bg: #0b0b10; --fg: #eaeaea; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    header { position: fixed; top: 0; left: 0; right: 0; padding: 10px 14px; display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,.35); backdrop-filter: blur(6px); border-bottom: 1px solid rgba(255,255,255,.06); }
+    header h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: .2px; }
+    header a { color: var(--fg); opacity: .9; text-decoration: none; border: 1px solid rgba(255,255,255,.15); padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+    main { height: 100%; display: grid; place-items: center; padding-top: 50px; }
+    model-viewer { width: min(92vw, 1200px); height: min(78vh, 900px); border-radius: 14px; border: 1px solid rgba(255,255,255,.08); }
+    footer { position: fixed; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; font-size: 12px; opacity: .8; }
+    .hint { margin-top: 8px; text-align: center; font-size: 12px; opacity: .7; }
+    /* Hide the default "AR" button unless you want it */
+    model-viewer::part(default-ar-button) { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>bounation – 3D Model</h1>
+    <a href="./assets/model.glb" download>Download GLB</a>
+    <a href="https://github.com/barrrrooo/bounation" target="_blank" rel="noopener">View Repo</a>
+  </header>
+
+  <main>
+    <!-- Use a RELATIVE path so it works on project pages -->
+    <model-viewer
+      id="viewer"
+      src="./assets/model.glb"
+      alt="3D model"
+      camera-controls
+      auto-rotate
+      autoplay
+      shadow-intensity="1"
+      exposure="1.0"
+      interaction-prompt="auto"
+      loading="eager"
+      ar-modes="webxr scene-viewer quick-look">
+      <!-- Fallback for very old browsers -->
+      <p style="padding:12px">Your browser doesn’t support &lt;model-viewer&gt;. Please try a modern browser.</p>
+    </model-viewer>
+  </main>
+
+  <footer>
+    <div class="hint">If you see a black screen, open DevTools → Network and confirm <code>assets/model.glb</code> returns <strong>200</strong>, not 404.</div>
+  </footer>
+</body>
+</html>
