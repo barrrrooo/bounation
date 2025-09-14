@@ -4,115 +4,107 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>bounation</title>
-  <!-- Local copies to avoid CDN issues -->
+
+  <!-- If your network blocks CDNs, host these files locally and switch to the local tags below. -->
+  <script type="module">
+    (async () => {
+      const cdns = [
+        "https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js",
+        "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+      ];
+      let ok = false;
+      for (const url of cdns) {
+        try { await import(url); ok = true; break; } catch {}
+      }
+      if (!ok) {
+        document.getElementById('status').textContent =
+          "Failed to load @google/model-viewer from CDNs. Consider vendoring it locally.";
+      }
+    })();
+  </script>
+  <!-- LOCAL (no-CDN) fallback. Uncomment if you add vendor files.
   <script type="module" src="./vendor/model-viewer.min.js"></script>
   <script nomodule src="./vendor/model-viewer-legacy.js"></script>
+  -->
+
   <style>
-    html,body{height:100%;margin:0;background:#000}
+    html,body{height:100%;margin:0;background:#000;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     model-viewer{width:100%;height:100%;display:block}
-    .title{
-      position:fixed;left:0;top:0;padding:12px 16px;color:#fff;z-index:10;
-      font:700 16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;letter-spacing:.3px;
-      user-select:none;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,0));
-    }
-    .bar{
-      position:fixed;left:0;right:0;bottom:0;z-index:11;
-      padding:10px 16px 16px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7));
-      display:flex;gap:12px;align-items:center;
-    }
-    button{
-      padding:8px 12px;border-radius:8px;background:#1f1f1f;color:#fff;border:1px solid #3a3a3a;
-      font:600 13px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;cursor:pointer;
-    }
+    .title{position:fixed;left:0;top:0;padding:12px 16px;color:#fff;z-index:10;
+           font-weight:700;letter-spacing:.3px;user-select:none;pointer-events:none;
+           background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))}
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:11;display:flex;gap:12px;align-items:center;
+         padding:10px 16px 16px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7))}
+    button{padding:8px 12px;border-radius:8px;background:#1f1f1f;color:#fff;border:1px solid #3a3a3a;font:600 13px inherit;cursor:pointer}
     button:active{transform:translateY(1px)}
-    input[type="range"]{
-      flex:1 1 auto;height:6px;appearance:none;background:#333;border-radius:6px;outline:none
-    }
-    input[type="range"]::-webkit-slider-thumb{
-      appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:none;margin-top:-4px
-    }
-    input[type="range"]::-moz-range-thumb{
-      width:14px;height:14px;border-radius:50%;background:#fff;border:none
-    }
+    input[type="range"]{flex:1;height:6px;appearance:none;background:#333;border-radius:6px;outline:none}
+    input[type="range"]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:none;margin-top:-4px}
+    input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none}
+    .hud{position:fixed;right:8px;top:8px;color:#fff;font-size:12px;opacity:.9;background:rgba(0,0,0,.45);padding:6px 8px;border-radius:8px;z-index:12;max-width:50ch}
   </style>
 </head>
 <body>
   <div class="title">bounation</div>
+  <div id="hud" class="hud"><strong>Status:</strong> <span id="status">loading…</span></div>
 
-  <!-- Change src if your file isn't at ./assets/model.glb -->
   <model-viewer id="mv"
     src="./assets/model.glb"
     camera-controls
     autoplay
     animation-loop
-    animation-crossfade-duration="300">
+    environment-image="neutral"
+    exposure="1.0"
+    shadow-intensity="1"
+    camera-orbit="0deg 75deg auto">
   </model-viewer>
 
   <div class="bar">
-    <button id="playBtn" type="button" aria-label="Play animation">Play</button>
-    <input id="seek" type="range" min="0" max="1" step="0.001" value="0" aria-label="Scrub animation timeline"/>
+    <button id="playBtn" type="button">Play</button>
+    <input id="seek" type="range" min="0" max="1" step="0.001" value="0" />
   </div>
 
   <script type="module">
     const mv = document.getElementById('mv');
     const seek = document.getElementById('seek');
     const playBtn = document.getElementById('playBtn');
+    const statusEl = document.getElementById('status');
 
-    let dragging = false;
-    let wasPlaying = false;
-    let isPlaying = false;
+    let dragging = false, wasPlaying = false, isPlaying = false;
 
-    function updateButton(){
-      playBtn.textContent = isPlaying ? 'Pause' : 'Play';
-      playBtn.setAttribute('aria-label', isPlaying ? 'Pause animation' : 'Play animation');
-    }
+    function setStatus(s){ statusEl.textContent = s; }
+    function updateBtn(){ playBtn.textContent = isPlaying ? 'Pause' : 'Play'; }
+    function play(){ mv.play(); isPlaying = true; updateBtn(); }
+    function pause(){ mv.pause(); isPlaying = false; updateBtn(); }
 
-    function play(){
-      mv.play();
-      isPlaying = true;
-      updateButton();
-    }
+    // Confirm GLB path returns 200
+    (async () => {
+      try {
+        const r = await fetch('./assets/model.glb', { method: 'HEAD' });
+        if (!r.ok) setStatus(`GLB not found (HTTP ${r.status}). Check path / filename.`);
+      } catch(e) {
+        setStatus('Failed to fetch GLB (network/CDN/firewall?).');
+      }
+    })();
 
-    function pause(){
-      mv.pause();
-      isPlaying = false;
-      updateButton();
-    }
+    playBtn.addEventListener('click', () => (isPlaying ? pause() : play()));
 
-    playBtn.addEventListener('click', () => {
-      isPlaying ? pause() : play();
-    });
-
-    // Load: pick first clip (if none set) and size the slider to duration
+    mv.addEventListener('error', (e) => setStatus('model-viewer error: ' + (e.message || 'unknown')));
     mv.addEventListener('load', () => {
       const clips = mv.availableAnimations || [];
       if (!mv.animationName && clips.length) mv.animationName = clips[0];
 
-      if (mv.duration) {
-        seek.max  = String(mv.duration); // seconds
-        seek.step = "0.001";
-      }
-      play(); // start playing by default
+      if (mv.duration) { seek.max = String(mv.duration); seek.step = '0.001'; }
+      play();
+      setStatus('loaded ✔');
     });
 
-    // Scrub: pause while dragging, jump to time, resume if it was playing
+    // Scrub behavior
     seek.addEventListener('pointerdown', () => { dragging = true; wasPlaying = isPlaying; pause(); });
-    seek.addEventListener('input', () => {
-      const t = parseFloat(seek.value || "0");
-      if (!Number.isNaN(t)) mv.currentTime = t;
-    });
-    window.addEventListener('pointerup', () => {
-      if (dragging) {
-        dragging = false;
-        if (wasPlaying) play();
-      }
-    });
+    seek.addEventListener('input', () => { const t = parseFloat(seek.value||'0'); if (!Number.isNaN(t)) mv.currentTime = t; });
+    window.addEventListener('pointerup', () => { if (dragging){ dragging = false; if (wasPlaying) play(); } });
 
-    // Keep slider synced with current time during playback
-    (function sync(){
-      if (!dragging && mv.duration) seek.value = mv.currentTime.toFixed(3);
-      requestAnimationFrame(sync);
-    })();
+    // Keep slider synced
+    (function sync(){ if (!dragging && mv.duration) seek.value = mv.currentTime.toFixed(3); requestAnimationFrame(sync); })();
   </script>
 </body>
 </html>
