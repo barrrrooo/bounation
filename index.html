@@ -1,122 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Viewer – GitHub Pages Starter</title>
+  <meta charset="UTF-8" />
+  <title>3D Model Viewer</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    :root{--bg:#0b0f17;--card:#121826;--ink:#e9edf3;--muted:#9aa3b2;--border:#1f2738}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-    .wrap{max-width:1100px;margin:auto;padding:24px}
-    header h1{margin:4px 0 6px;font-size:28px}
-    .badge{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;opacity:.85;display:inline-block}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 4px 18px rgba(0,0,0,.25);margin:16px 0}
-    .row{display:grid;gap:16px;grid-template-columns:1fr} @media(min-width:960px){.row{grid-template-columns:2fr 1fr}}
-    label{font-size:13px;opacity:.9;display:block;margin-bottom:4px}
-    input,button,a.btn{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e1421;color:var(--ink)}
-    .hint{font-size:12px;color:var(--muted);margin-top:6px}
-    .qr img{width:100%;max-width:240px;border-radius:12px;background:#fff;padding:8px}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    code{background:#0e1421;border:1px solid var(--border);padding:2px 6px;border-radius:6px}
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+    }
+    model-viewer {
+      width: 80%;
+      height: 80%;
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <span class="badge">GitHub Pages • <model-viewer> demo</span>
-    <h1>3D Viewer</h1>
-    <p class="hint">This page displays a GLB/GLTF 3D model using the <code>&lt;model-viewer&gt;</code> web component.</p>
-  </header>
-
-  <div class="row">
-    <div class="card">
-      <!-- Replace src below with /assets/your-model.glb after uploading your model -->
-      <model-viewer id="viewer"
-        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-        alt="3D model"
-        camera-controls
-        auto-rotate
-        interaction-prompt="none"
-        exposure="1.0"
-        shadow-intensity="1"
-        style="width:100%;height:65vh;border-radius:12px;overflow:hidden;background:#0e1421;">
-      </model-viewer>
-
-      <div class="grid-2" style="margin-top:12px">
-        <button id="loadLocal">Load local .glb/.gltf</button>
-        <button id="useRepoAsset">Use /assets/model.glb</button>
-      </div>
-      <p class="hint">Tip: Put your model at <code>/assets/model.glb</code> (max ~100&nbsp;MB on GitHub) and click “Use /assets/model.glb”.</p>
-      <input id="fileInput" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" style="display:none" />
-    </div>
-
-    <div class="card">
-      <h3 style="margin:0 0 8px">Quick Start</h3>
-      <ol style="margin:0 0 8px 16px;padding:0 0 0 8px">
-        <li>Create a public repo, upload this folder.</li>
-        <li>Enable Pages: <em>Settings → Pages → Deploy from a branch (main / root)</em>.</li>
-        <li>Open your site URL and test.</li>
-      </ol>
-      <p class="hint">Project sites live at <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code>. Prefer relative paths like <code>/assets/model.glb</code>.</p>
-
-      <div class="qr" style="margin-top:8px">
-        <label for="targetUrl">QR for this page</label>
-        <input id="targetUrl" placeholder="https://user.github.io/repo/" />
-        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
-          <img id="qrImg" alt="QR" />
-          <a id="dlPng" class="btn" download="3d-viewer-qr.png">Download QR PNG</a>
-          <a id="openUrl" class="btn" target="_blank" rel="noopener">Open</a>
-        </div>
-        <p class="hint">Use this on brochures or posters. Keep printed QR ≥ 4&nbsp;cm for reliability.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const viewer = document.getElementById('viewer');
-  const fileInput = document.getElementById('fileInput');
-  const loadLocalBtn = document.getElementById('loadLocal');
-  const useRepoAssetBtn = document.getElementById('useRepoAsset');
-
-  loadLocalBtn.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', (e) => {
-    const f = e.target.files?.[0];
-    if(!f) return;
-    const url = URL.createObjectURL(f);
-    viewer.src = url;
-  });
-  useRepoAssetBtn.addEventListener('click', () => {
-    viewer.src = location.origin + (location.pathname.endsWith('/') ? '' : '/') + 'assets/model.glb';
-  });
-
-  // QR utilities
-  const qrApi = (url,size=480,margin=2,ecc='H') =>
-    `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=${margin}&ecc=${ecc}&data=${encodeURIComponent(url)}`;
-
-  const targetUrl = document.getElementById('targetUrl');
-  const qrImg = document.getElementById('qrImg');
-  const dlPng = document.getElementById('dlPng');
-  const openUrl = document.getElementById('openUrl');
-
-  function updateQR(){
-    const url = targetUrl.value.trim();
-    if(!url){ qrImg.src=''; dlPng.href='#'; openUrl.href='#'; return; }
-    const src = qrApi(url);
-    qrImg.src = src;
-    dlPng.href = src;
-    openUrl.href = url;
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const here = location.href;
-    if (here.startsWith('http')) {
-      targetUrl.value = here;
-      updateQR();
-    }
-  });
-  targetUrl.addEventListener('input', updateQR);
-</script>
+  <model-viewer src="model.glb" 
+                alt="3D model"
+                auto-rotate 
+                camera-controls 
+                background-color="#111">
+  </model-viewer>
 </body>
 </html>
